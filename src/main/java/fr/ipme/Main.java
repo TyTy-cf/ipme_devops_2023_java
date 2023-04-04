@@ -2,7 +2,6 @@ package fr.ipme;
 
 import fr.ipme.entity.*;
 import fr.ipme.entity.spotifish.Subscription;
-import fr.ipme.exception.PawsException;
 import fr.ipme.entity.interfaces.IShout;
 
 import java.lang.reflect.Field;
@@ -10,10 +9,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 
 public class Main {
@@ -28,6 +24,10 @@ public class Main {
 //        exo2();
 //        exo3();
 //        exo4();
+//        exo5();
+//        exo6("Thomas Florian Guillaume Yvain Gauvain");
+//        exo7();
+        exo8();
 //        jdbc();
 //        reflectionClass();
     }
@@ -198,6 +198,72 @@ public class Main {
                 scanner.next();
             }
         }
+    }
+
+    private static void exo5() {
+        System.out.println("Dé 6 faces : " + throwDice(6));
+        System.out.println("Lancer 5 dés :");
+        for (int i = 0; i < 4; i++) {
+            System.out.println("Dé 20 faces : " + throwDice(20));
+        }
+    }
+
+    private static void exo6(String word) {
+        int nbVowels = 0;
+        List<Character> vowels = Arrays.asList('a', 'e', 'i', 'o', 'u', 'y', 'é', 'è', 'ê', 'î', 'û', 'ï');
+        for (char c : word.toLowerCase().toCharArray()) {
+            if (vowels.contains(c)) {
+                nbVowels++;
+            }
+        }
+        System.out.println("Il y a : " + nbVowels +  " voyelles dans " + word);
+    }
+
+    private static void exo7() {
+        boolean success = false;
+        Integer aNumber = null;
+        while (!success) {
+            try {
+                if (aNumber == null || aNumber < 0) {
+                    System.out.println("Saisir un nombre entier :");
+                    aNumber = scanner.nextInt();
+                }
+                if (aNumber != null && aNumber > 0) {
+                    success = true;
+                    System.out.println("Le nombre saisie est : " + aNumber);
+                    System.out.println("Sa racine carré est : " + Math.sqrt(aNumber));
+                }
+            } catch (Exception e) {
+                scanner.next();
+            }
+        }
+    }
+
+    private static int throwDice(int max) {
+        Random rand = new Random();
+        return (rand.nextInt(max)) + 1;
+    }
+
+    private static void exo8() {
+        // Generate random number
+        Random rand = new Random();
+        int numberToGuess = (rand.nextInt(100)) + 1;
+        System.out.println("Le nombre à deviner est : " + numberToGuess); // TO COMMENT
+        int trys = 0;
+
+
+
+        // Loop :
+        // Ask the user to write a number in console
+        // Once he types one, check the numberWritten with the randomNumber
+        // If numberWritten > randomNumber
+        // Display "less"
+        // If numberWritten < randomNumber
+        // Display "more"
+        // else
+        // "You win !"
+        // Increase tries
+        // Display the number of tries and the guessed number
     }
 
     @Override
