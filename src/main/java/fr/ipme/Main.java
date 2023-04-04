@@ -1,9 +1,18 @@
 package fr.ipme;
 
 import fr.ipme.entity.*;
+import fr.ipme.entity.spotifish.Subscription;
 import fr.ipme.exception.PawsException;
 import fr.ipme.entity.interfaces.IShout;
 
+import java.lang.reflect.Field;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 
@@ -18,7 +27,41 @@ public class Main {
 //        exo1();
 //        exo2();
 //        exo3();
-        exo4();
+//        exo4();
+//        jdbc();
+//        reflectionClass();
+    }
+
+    private static void reflectionClass() {
+        System.out.println(Subscription.class.getSimpleName().toLowerCase());
+        Object subscription = new Subscription();
+        Field[] fields = subscription.getClass().getDeclaredFields();
+        for (Field field: fields) {
+            System.out.println(field.getType() + " " + field.getName());
+        }
+        System.out.println(Arrays.toString(Subscription.class.getConstructors()));
+    }
+
+    private static void jdbc() {
+        String url = "jdbc:mariadb://localhost:3307/db_spotifish";
+//        String url = "jdbc:mysql://localhost:3306/db_spotifish";
+        List<Subscription> subscriptions = new ArrayList<>();
+        try {
+            Connection connection = DriverManager.getConnection(url, "root", "");
+            Statement stmt = connection.createStatement();
+            String sql = "SELECT * FROM " + Subscription.class.getName().toLowerCase();
+            ResultSet rs = stmt.executeQuery(sql);
+            while (rs.next()) {
+                long id = rs.getLong("id");
+                String name = rs.getString("name");
+                double cost = rs.getDouble("cost");
+                subscriptions.add(new Subscription(id, name, cost));
+            }
+        } catch (Exception e) {
+            System.out.println("Error while trying to access the DB : " + e.getMessage());
+        }
+//        System.out.println(subscriptions);
+
     }
 
     private static void cours() {
@@ -33,11 +76,7 @@ public class Main {
                 ((IShout) animals[i]).shout();
             } else {
                 System.out.println(animals[i].getClass() + " ne peux pas crier !");
-                try {
-                    animals[i].setPaws(-2);
-                } catch (PawsException pe) {
-                    System.out.println("PE : " + pe.getMessage());
-                }
+                animals[i].setPaws(-2);
             }
         }
 
@@ -50,6 +89,21 @@ public class Main {
         } finally {
             System.out.println("Je suis du code exécuté tout le temps !");
         }
+
+        List<Animal> animalsList = Arrays.asList(anOtherDog, rabbit, cat, dog);
+
+        List<Animal> dogs = animalsList.stream()
+                .filter(element -> (element instanceof Dog))
+                .toList();
+
+        List<Animal> onlyDogs = new ArrayList<>();
+        for (Animal a : animals) {
+            if (a instanceof Dog) {
+                onlyDogs.add(a);
+            }
+        }
+
+        animalsList.sort((Animal::compareTo));
     }
 
     private static void exo1() {

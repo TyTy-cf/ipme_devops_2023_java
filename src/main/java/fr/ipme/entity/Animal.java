@@ -1,23 +1,22 @@
 package fr.ipme.entity;
 
-import fr.ipme.exception.PawsException;
+import fr.ipme.entity.enums.EnumDiet;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-public abstract class Animal {
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public abstract class Animal implements Comparable<Animal> {
 
     protected int paws;
+    protected EnumDiet diet;
 
-    public Animal(int paws) {
-        this.paws = paws;
-    }
-
-    public int getPaws() {
-        return paws;
-    }
-
-    public void setPaws(int paws) throws PawsException {
-        if (paws < 0) {
-            throw new PawsException();
-        }
-        this.paws = paws;
+    @Override
+    public int compareTo(Animal animal) {
+        return this.diet.ordinal() - animal.diet.ordinal();
     }
 }
