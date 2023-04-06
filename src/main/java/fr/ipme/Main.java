@@ -3,6 +3,7 @@ package fr.ipme;
 import fr.ipme.entity.*;
 import fr.ipme.entity.spotifish.Subscription;
 import fr.ipme.entity.interfaces.IShout;
+import fr.ipme.repository.Repository;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -25,6 +26,8 @@ public class Main {
 
     private static final Scanner scanner = new Scanner(System.in);
 
+    private static final Repository repository = new Repository("jdbc:mariadb://localhost:3307/db_geo-gouv");
+
     public static void main(String[] args) {
 //        cours();
 //        exo1();
@@ -35,11 +38,27 @@ public class Main {
 //        exo6("Thomas Florian Guillaume Yvain Gauvain");
 //        exo7();
 //        exo8();
-        exo9();
+//        exo9();
 //        reflectionClass();
 //        jdbc();
 //        http();
 //        post();
+        initDepartmentsDataBase();
+        try {
+            ResultSet rs = repository.findAll("department");
+            List<Department> departments = new ArrayList<>();
+            if (rs != null) {
+                while (rs.next()) {
+                    String name = rs.getString("name");
+                    String code = rs.getString("code");
+                    String regionCode = rs.getString("region_code");
+                    departments.add(new Department(code, name, regionCode));
+                }
+            }
+            System.out.println(departments.size());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     private static void post() {
@@ -70,6 +89,63 @@ public class Main {
         }
     }
 
+    private static void initDepartmentsDataBase() {
+        try {
+            HttpResponse<String> response = getResponseByUrl("https://geo.api.gouv.fr/departements/");
+            if (response != null) {
+                if (response.statusCode() == 200 || response.statusCode() == 201) {
+                    System.out.println(response);
+                    createDepartmentTable();
+                    JSONTokener jsonTokener = new JSONTokener(response.body());
+                    JSONArray jsonArray = new JSONArray(jsonTokener);
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject jsonDpt = jsonArray.getJSONObject(i);
+                        String name = jsonDpt.getString("nom");
+                        if (name.contains("'")) {
+                            name = name.replace("'", "\\'");
+                        }
+                        String sql =
+                                "INSERT INTO department VALUES ( '"
+                                        + jsonDpt.getString("code") + "', '"
+                                        + name + "', '"
+                                        + jsonDpt.getString("codeRegion") + "');";
+                        repository.executeQuery(sql);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void createDepartmentTable() {
+        String drop = "DROP TABLE IF EXISTS department;";
+        String sql = "CREATE TABLE department(" +
+                "    `code` VARCHAR(3) NOT NULL," +
+                "    name VARCHAR(128) NOT NULL," +
+                "    region_code VARCHAR(2) NOT NULL," +
+                "    PRIMARY KEY(`code`)" +
+                ") ENGINE = INNODB;";
+        repository.executeQuery(drop);
+        repository.executeQuery(sql);
+    }
+
+    private static HttpResponse<String> getResponseByUrl(String url) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create(url))
+                .build();
+        HttpClient client = HttpClient.newHttpClient();
+
+        try {
+            return client.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (Exception e) {
+            System.out.println("An issue occured while trying to fetch the API...");
+            System.out.println(e.getMessage());
+            return null;
+        }
+    }
+
     private static void http() {
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
@@ -88,6 +164,7 @@ public class Main {
                     JSONArray jsonArray = new JSONArray(jsonTokener);
                     for (int i = 0; i < jsonArray.length(); i++) {
                         JSONObject jsonRegion = jsonArray.getJSONObject(i);
+                        // INSERT INTO departement VALUES (... jsonRegion.getString("nom") );
                         regions.add(new Region(
                                 jsonRegion.getString("nom"),
                                 jsonRegion.getString("code")
@@ -104,6 +181,7 @@ public class Main {
             }
         } catch (Exception e) {
             System.out.println("An issue occured while trying to fetch the API...");
+            System.out.println(e.getMessage());
         }
     }
 
