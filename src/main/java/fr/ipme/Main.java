@@ -3,8 +3,15 @@ package fr.ipme;
 import fr.ipme.entity.*;
 import fr.ipme.entity.spotifish.Subscription;
 import fr.ipme.entity.interfaces.IShout;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import java.lang.reflect.Field;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -27,9 +34,77 @@ public class Main {
 //        exo5();
 //        exo6("Thomas Florian Guillaume Yvain Gauvain");
 //        exo7();
-        exo8();
-//        jdbc();
+//        exo8();
+        exo9();
 //        reflectionClass();
+//        jdbc();
+//        http();
+//        post();
+    }
+
+    private static void post() {
+        Map<String, String> datas = new HashMap<>();
+        datas.put("name", "SuperDevOps");
+        datas.put("nickname", "ZuperDevOpz");
+        datas.put("password", "unPassword");
+        datas.put("email", "superdevops@ipme.fr");
+        JSONObject requestBody = new JSONObject(datas);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody.toString()))
+                .uri(URI.create("https://steam-ish.test-02.drosalys.net/api/account"))
+                .header("Accept", "application/json")
+                .build();
+        HttpClient client = HttpClient.newHttpClient();
+
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200  || response.statusCode() == 201) {
+                System.out.println(response.body());
+            } else {
+                System.out.println("Il y a eu un problème avec la requête... Code : " + response.statusCode());
+                System.out.println(response.body());
+            }
+        } catch (Exception e) {
+            System.out.println("Coup dur... rien ne marche !");
+        }
+    }
+
+    private static void http() {
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create("https://geo.api.gouv.fr/regions"))
+                .build();
+        HttpClient client = HttpClient.newHttpClient();
+
+        List<Region> regions = new ArrayList<>();
+
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response != null) {
+                if (response.statusCode() == 200) {
+//                    System.out.println(response.body());
+                    JSONTokener jsonTokener = new JSONTokener(response.body());
+                    JSONArray jsonArray = new JSONArray(jsonTokener);
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject jsonRegion = jsonArray.getJSONObject(i);
+                        regions.add(new Region(
+                                jsonRegion.getString("nom"),
+                                jsonRegion.getString("code")
+                        ));
+                    }
+                    System.out.println("Il existe " + regions.size() + " régions en France !");
+                    System.out.println(
+                            "La plus belle région de France est : " +
+                            (regions.stream()
+                                    .filter(region -> region.getName().contains("Auvergne"))
+                                    .toList()).get(0).getName()
+                    );
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("An issue occured while trying to fetch the API...");
+        }
     }
 
     private static void reflectionClass() {
@@ -43,13 +118,13 @@ public class Main {
     }
 
     private static void jdbc() {
-        String url = "jdbc:mariadb://localhost:3307/db_spotifish";
+        String url = "jdbc:mariadb://localhost:3307/spotifish";
 //        String url = "jdbc:mysql://localhost:3306/db_spotifish";
         List<Subscription> subscriptions = new ArrayList<>();
         try {
             Connection connection = DriverManager.getConnection(url, "root", "");
             Statement stmt = connection.createStatement();
-            String sql = "SELECT * FROM " + Subscription.class.getName().toLowerCase();
+            String sql = "SELECT * FROM subscription";
             ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
                 long id = rs.getLong("id");
@@ -75,7 +150,7 @@ public class Main {
             if (animals[i] instanceof IShout) {
                 ((IShout) animals[i]).shout();
             } else {
-                System.out.println(animals[i].getClass() + " ne peux pas crier !");
+//                System.out.println(animals[i].getClass() + " ne peux pas crier !");
                 animals[i].setPaws(-2);
             }
         }
@@ -91,6 +166,11 @@ public class Main {
         }
 
         List<Animal> animalsList = Arrays.asList(anOtherDog, rabbit, cat, dog);
+        System.out.println(
+                Arrays.stream(animals)
+                        .filter(element -> (element instanceof Dog))
+                        .toList()
+        );
 
         List<Animal> dogs = animalsList.stream()
                 .filter(element -> (element instanceof Dog))
@@ -245,25 +325,63 @@ public class Main {
     }
 
     private static void exo8() {
-        // Generate random number
         Random rand = new Random();
         int numberToGuess = (rand.nextInt(100)) + 1;
-        System.out.println("Le nombre à deviner est : " + numberToGuess); // TO COMMENT
-        int trys = 0;
+        int trys = 1;
+        int userNumber;
+        int previousUserNumber = -1;
 
+        System.out.println("J'ai trouvé mon nombre, peux tu le deviner en moins de 10 coups ?");
+        while (trys <= 10) {
+            try {
+                System.out.println("Saisir un nombre : ");
+                userNumber = scanner.nextInt();
+                if (userNumber == previousUserNumber) {
+                    System.out.println("Tu as déjà saisit ce nombre...");
+                } else {
+                    if (userNumber == numberToGuess) {
+                        System.out.println("Félicitation, tu as trouvé le bon nombre !");
+                        System.out.println("Tu l'as trouvé en " + trys + " coups.");
+                        break;
+                    } else if (userNumber > numberToGuess) {
+                        System.out.println("Ton nombre est plus grand que le miens !");
+                    } else {
+                        System.out.println("Ton nombre est plus petit que le miens !");
+                    }
 
+                    previousUserNumber = userNumber;
+                    trys++;
+                }
+            } catch (Exception e) {
+                scanner.next();
+            }
+        }
+        if (trys == 11) {
+            System.out.println("Tu n'as pas trouvé le nombre durant le nombre de coups impartie :(");
+            System.out.println("Le nombre était : " + numberToGuess);
+        }
+    }
 
-        // Loop :
-        // Ask the user to write a number in console
-        // Once he types one, check the numberWritten with the randomNumber
-        // If numberWritten > randomNumber
-        // Display "less"
-        // If numberWritten < randomNumber
-        // Display "more"
-        // else
-        // "You win !"
-        // Increase tries
-        // Display the number of tries and the guessed number
+    private static void exo9() {
+        int[] array = new int[]{1, 5, 34, 52};
+        int i = 0;
+        int j = i++; // i++ : affecte puis incrémente
+        System.out.println(j);
+        i = 0;
+        j = ++i; // i++ : incrémente puis affecte
+        System.out.println(j);
+        arrayRecursiveDisplay(array, 0);
+    }
+
+    private static void arrayRecursiveDisplay(int[] array, int index) {
+        if (index < array.length) {
+            System.out.println(array[index]);
+            arrayRecursiveDisplay(array, ++index);
+        }
+//        while (index < array.length) {
+//            System.out.println(array[index]);
+//            index++;
+//        }
     }
 
     @Override
