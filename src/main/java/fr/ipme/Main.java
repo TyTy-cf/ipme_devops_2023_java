@@ -41,24 +41,24 @@ public class Main {
 //        exo9();
 //        reflectionClass();
 //        jdbc();
-//        http();
+        http();
 //        post();
-        initDepartmentsDataBase();
-        try {
-            ResultSet rs = repository.findAll("department");
-            List<Department> departments = new ArrayList<>();
-            if (rs != null) {
-                while (rs.next()) {
-                    String name = rs.getString("name");
-                    String code = rs.getString("code");
-                    String regionCode = rs.getString("region_code");
-                    departments.add(new Department(code, name, regionCode));
-                }
-            }
-            System.out.println(departments.size());
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
+//        initDepartmentsDataBase();
+//        try {
+//            ResultSet rs = repository.findAll("department");
+//            List<Department> departments = new ArrayList<>();
+//            if (rs != null) {
+//                while (rs.next()) {
+//                    String name = rs.getString("name");
+//                    String code = rs.getString("code");
+//                    String regionCode = rs.getString("region_code");
+//                    departments.add(new Department(code, name, regionCode));
+//                }
+//            }
+//            System.out.println(departments.size());
+//        } catch (Exception e) {
+//            System.out.println(e.getMessage());
+//        }
     }
 
     private static void post() {
@@ -164,6 +164,9 @@ public class Main {
                     JSONArray jsonArray = new JSONArray(jsonTokener);
                     for (int i = 0; i < jsonArray.length(); i++) {
                         JSONObject jsonRegion = jsonArray.getJSONObject(i);
+                        for (String key : jsonRegion.keySet()) {
+                            System.out.println(key);
+                        }
                         // INSERT INTO departement VALUES (... jsonRegion.getString("nom") );
                         regions.add(new Region(
                                 jsonRegion.getString("nom"),
